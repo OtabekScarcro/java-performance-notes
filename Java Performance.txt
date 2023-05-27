@@ -1,0 +1,208 @@
+============================
+Java Application Performance
+============================
+
+
+	|========================================================================================|
+	| In this course we are learning how to improve out application performance.		 |
+	| Also we will analyse how heap works and we will use some additional tools to observe	 |
+	| heap memory and to see how GC works and others.					 |
+	|========================================================================================|
+
+----------------------------------------------------
+Section 2 - Just In Time Copmpilation and Code Cache
+----------------------------------------------------
+
+The Code cache - we can find out about the size of code cache by using a JVM flag, 
+which is -XX:+PrintCodeCache ( java -XX:+PrintCodeCache 'class-name' )
+
+The maximum size of code cache is dependent on which version of Java you are using.
+
+Java 7 or below: either 32 or 48 megabytes.
+it was 48 mb if you are using 64 bit JVM and 32 mb if you are using 32 bit JVM.
+If you are using Java 8 or above and you're using 64 bit JVM, 
+then code cache can be up to 240 mb.
+
+We have 3 way to change code cache size:
+--> InitialCodeCacheSize
+--> ReservedCodeCacheSize
+--> CodeCacheExpansionSize
+
+
+------------------------------
+Section 3 - Selecting the JVM
+------------------------------
+
+--> The 32 bit JVM will be faster than 64 bit JVM.
+--> In 64 bit JVM Max Heap size is dependent on the OS
+--> 64 bit JVM has C1 and C2 compilers
+    The C1 compiler is known as the client's compiler and 
+    the C2 compiler is known as the server compiler.
+--> 32 bit JVM has only the client compiler
+
+--> JVM Compiler flags:
+    -client
+    -server
+    -d64
+
+
+---------------------------------------------
+Section 4 - How memory works: Stack and Heap
+---------------------------------------------
+
+-----Stack-----
+--> The stack memory is used for storing local variables and method call information
+    during the execution of a thread
+--> Every thread will have its own stack
+--> Java knows exactly when data can be destroyed on the Stack
+--> The data we added first is pushed down towards the bottom 
+    and new item is placed on the top
+--> We can pull ARTPOP data from the top of the stack
+--> this method is also known as First In Last Out
+
+-----Heap-----
+--> The heap is the runtime data area where objects are allocated and deallocated 
+    during the execution of a program.
+--> It is a region of memory that is shared among all threads in a Java application.
+--> When we create new object by 'new' keyword a new Object will be created on the heap.
+--> if any object is no longer in use JVM will remove this object from the heap 
+	( but how to know the object is not used ? )
+--> Objects on the heap are accessed through references. Variables that hold object 
+    references are typically stored on the stack, and if there is no variable which is
+    holding a particular object on the heap this object will be removed
+--> The JVM categorizes objects into different generations based on their lifespan,
+    such as young generation, old generation, and permanent generation.
+--> The size of the heap can be configured when starting the JVM by :
+	-Xms for initial heap size
+	-Xmx for maximum heap size
+
+
+
+--------------------------------------------
+Section 5 - Passing Objects between methods
+--------------------------------------------
+
+--> Passing by value means - when we pass a variable into a method, only its value will be copied,
+    if we change the value of this variable into this method, it will not affect to out of the method.
+
+--> Passing by reference means - when we pass an object into a method, its reference value will be passed,
+    it means, if we change this something in this object into the method, it will affect to the real object
+    which is outside of the method.
+
+	('final' keyword is not the same as 'constant')
+--> final keyword: When applied to a variable, the final keyword indicates that the variable's value cannot be changed once it is assigned.
+--> Constants: Constants, on the other hand, are variables whose values are fixed and cannot be changed during the execution of a program.
+
+
+--------------------------------
+Section 7 - Escaping References
+--------------------------------
+--> In programming, an escaping reference refers to a situation where a reference to an object is passed outside of its intended scope or lifetime.
+    This can lead to unexpected and potentially incorrect behavior in a program.
+--> When an object reference escapes, it means that it is accessible to code beyond the intended scope or lifetime of that object.
+
+--> This can happen in several scenarios:
+	--Returning references: If a method returns a reference to an object,
+          that reference can be captured by the caller and used outside of the method's intended scope.
+	--Storing references in global variables or static fields: If an object reference is stored in 
+	  a global variable or a static field, it becomes accessible to other parts of the program 
+	  that may not have been originally intended to access it.
+	--Publishing references prematurely: If an object reference is published before its initialization 
+	  or before it is fully constructed, other parts of the program can obtain a reference to it before it is ready.
+
+--> To prevent escaping references, it's generally good practice to encapsulate objects and their references within 
+    well-defined scopes and ensure that they are properly managed.
+--> This includes carefully controlling the visibility and lifetime of object references and properly 
+    synchronizing access to shared objects in multi-threaded environments.
+
+
+----------------------------------------------
+Section 10 - Tuning The JVM's Memory Settings
+----------------------------------------------
+--> '-XX:+PrintStringTableStatistics' flag will give some information about string's in the application.
+
+--> Other syntaxes for heap tuning flags:
+    -XX:StringTableSize=n
+    -XX:MaxHeapSize=n         -Xmx
+    -XX:InitialHeapSize=n     -Xms
+    
+    -XX:+UnlockDiagnosticVMOptions
+    -XX:+PrintFlagsFinal
+
+
+--------------------------------------------
+Section 11 - Introducing Garbage Collection
+--------------------------------------------
+
+--> Java works out when objects are no longer needed
+--> Memory leaks shouldn't be possible in Java
+--> Garbage Collection is the process to free up memeory
+
+--> Any object on the heap which cannot be reached through a reference from the stack is eligible for
+    Garbage Collection
+--> Static objects are referenced from meter space. Any object which is unreachable from the stack 
+    or from the meter space is eligible for Garbage Collection. Because these static objects will
+    never be lost.
+--> System.gc() - it tell to the VM to run a Garbage Collection process. But there is no guarantee
+    that the VM will actually do that. It is not a command. And also it is not suggestable to use
+    this method after java 8 it is taking space from the heap
+--> finalize() - it will run when Garbage Collection is processing for a partecular Object
+--> it is not suggestable to use finalize() method, because if something went wrong in this method
+    (like infinite loop), it will affect the performace of Garbage Collection
+
+
+---------------------------------
+Section 12 - Monitoring the Heap
+---------------------------------
+
+--> Memory leaks shouldn't be possible in Java
+--> Soft leaks - when an object remains referenced when no longer needed
+--> VisualVM - this application allows to view the stack and the heap
+
+----------------------------
+Section 20 - How Lists work
+----------------------------
+
+--> Types of List:
+	ArrayList
+	CopyOnWriteArrayList
+	LinkedList
+	AttributeList
+	RoleList
+	RoleUnresolvedList
+	Stack
+	Vector
+--> CopyOnWriteArrayList - consider using it when:
+	Multi-threaded application
+	Multiple threads access the same list
+	Lots of iterations / reads
+	FEW writes / additions / deletions
+
+      |==========================================|
+      |           ArrayList   VS   LinkedList    |
+      | -----------------------------------------|
+      |	-iteration    +		       +	 |
+      | -----------------------------------------|
+      |	-get	      +		       -	 |
+      | -----------------------------------------|
+      |	-add	      -		       +	 |
+      | -----------------------------------------|
+      |	-remove	      dependent on scenario 	 |
+      |==========================================|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
